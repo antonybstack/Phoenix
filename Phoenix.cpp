@@ -23,16 +23,122 @@ bool topCollision = false;
 bool bottomCollision = false;
 int timer = 0;
 int startScreenTimer = 0;
-unsigned short gameLevel = 1;
+unsigned short gameLevel = 0;
 bool gameStart = false;
 bool gameComplete = false;
 bool gamePause = false;
 bool levelComplete = true;
 unsigned int nScore = 0;
+short enemiesCreated = 0;
+/*
+float bXa;
+float bXb;
+float bYa;
+float bYb;
+float bX1 = 50.0f;
+float bX2 = -50.0f;
+float bX3 = 100.0f;
+float bY1 = 10.0f;
+float bY2 = 150.0f;
+float bY3 = 150.0f;
+float bi = 0;
+*/
 
 struct Coordinate {
 	float x;
 	float y;
+};
+
+struct Bezier {
+	float ex1;
+	float ey1;
+
+	// two control points of bezier curve
+	float cx1;
+	float cy1;
+	float cx2;
+	float cy2;
+
+	// 2nd end point of bezier curve
+	float ex2;
+	float ey2;
+
+	//bezier incrementer
+	float bi;
+
+	// The green line cooridinates
+	float xGreen1;
+	float yGreen1;
+	float xGreen2;
+	float yGreen2;
+	float xGreen3;
+	float yGreen3;
+
+	// The Blue Line coordinates
+	float xBlue1;
+	float yBlue1;
+	float xBlue2;
+	float yBlue2;
+
+	// The final calculated coordinate on the bezier curve
+	float xFinal;
+	float yFinal;
+
+	bool switchy;
+	Bezier() {
+		// 1st end point of bezier curve
+		ex1 = 0.0f;
+		ey1 = 0.0f;
+
+		// two control points of bezier curve
+		cx1 = 0.0f;
+		cy1 = 0.0f;
+		cx2 = 0.0f;
+		cy2 = 0.0f;
+
+		// 2nd end point of bezier curve
+		ex2 = 0.0f;
+		ey2 = 0.0f;
+
+		//bezier incrementer
+		bi = 0.0f;
+
+		// The green line cooridinates
+		xGreen1 = 0.0f;
+		yGreen1 = 0.0f;
+		xGreen2 = 0.0f;
+		yGreen2 = 0.0f;
+		xGreen3 = 0.0f;
+		yGreen3 = 0.0f;
+
+		// The Blue Line coordinates
+		xBlue1 = 0.0f;
+		yBlue1 = 0.0f;
+		xBlue2 = 0.0f;
+		yBlue2 = 0.0f;
+
+		// The final calculated coordinate on the bezier curve
+		xFinal = 0.0f;
+		yFinal = 0.0f;
+
+		switchy = true;
+	}
+
+	void setBezier(float a, float b, float c, float d, float e, float f, float g, float h) {
+		// 1st end point of bezier curve
+		ex1 = a;
+		ey1 = b;
+
+		// two control points of bezier curve
+		cx1 = c;
+		cy1 = d;
+		cx2 = e;
+		cy2 = f;
+
+		// 2nd end point of bezier curve
+		ex2 = g;
+		ey2 = h;
+	}
 };
 
 struct GameObject {
@@ -46,6 +152,7 @@ struct Bullet {
 	bool used = false;
 	float x;
 	float y;
+
 	Bullet(float x1, float y1) {
 		x = x1;
 		y = y1;
@@ -94,9 +201,14 @@ struct Player : public GameObject {
 
 struct LowEnemy : public GameObject {
 	std::wstring sLEnemySprite;
+	bool initial = true;
+	short group;
 	bool hurt = false;
 	short hurtTimer = 0;
-	LowEnemy(float x, float y) {
+	short animationNum = 0;
+	short pixelsMoved = 0;
+	Bezier* bezier;
+	LowEnemy(float x, float y) : bezier() {
 		pos = { x,y };
 		health = 3;
 		width = 13;
@@ -112,9 +224,13 @@ struct LowEnemy : public GameObject {
 		sLEnemySprite += L"....o...o....";
 		sLEnemySprite += L"....o...o....";
 		sLEnemySprite += L"....o...o....";
+		bezier = new Bezier();
 	}
+
 	~LowEnemy() {
 		explosions.push_back(std::unique_ptr<Explosion>(new Explosion(this->pos.x, this->pos.y)));
+		//delete this->bezier;
+		//bezier = nullptr;
 		nScore += 100;
 	}
 };
@@ -195,6 +311,13 @@ struct HighEnemy : public GameObject {
 	}
 };
 
+int bezierPoint(float n1, float n2, float perc)
+{
+	float diff = n2 - n1;
+
+	return n1 + (diff * perc);
+}
+
 // initializing vectors and player object
 
 std::vector<std::shared_ptr<LowEnemy>> lowEnemies;
@@ -219,8 +342,34 @@ public:
 		switch (gameLevel)
 		{
 		case 1: {
-			//lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(20, 5)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(20, 8)));
+			if (enemiesCreated < 12) {
+				lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
+				for (auto& enemy : lowEnemies)
+				{
+					if (enemy->initial) {
+						enemy->bezier->setBezier(96.0f, 0.0f, 62.0f, 64.0f, 237.0f, 176.0f, 130.0f, 213.0f);
+						enemy->group = 1;
+						enemy->initial = false;
+					}
+				}
+				lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
+				for (auto& enemy : lowEnemies)
+				{
+					if (enemy->initial) {
+						enemy->bezier->setBezier(126.0f, -20.0f, 160.0f, 64.0f, -15.0f, 176.0f, 130.0f, 213.0f);
+						enemy->group = 2;
+						enemy->initial = false;
+					}
+				}
+
+				enemiesCreated += 2;
+			}
+
+			//LowEnemy temp = new LowEnemy(20, 8);
+			//temp->createBezier(89.0f, 79.0f, 14.0f, 117.0f, 34.0f, 238.0f, 108.0f, 170.0f);
+			//lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
+			//lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(45, 5)));
+			/*
 			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(45, 5)));
 			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(70, 8)));
 			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(95, 5)));
@@ -228,21 +377,39 @@ public:
 			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(145, 5)));
 			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(170, 8)));
 			//lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(220, 5)));
+			*/
+
+			//for (auto& enemy : lowEnemies)
+			//{
+			//	enemy->bezier->setBezier(96.0f, 8.0f, 62.0f, 64.0f, 237.0f, 176.0f, 130.0f, 213.0f);
+			//}
+
 			break;
 		}
 		case 2:
-			timer = 0;
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(20, 50)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(45, 50)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(70, 50)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(95, 50)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(120, 50)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(145, 50)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(170, 50)));
-			medEnemies.push_back(std::unique_ptr<MedEnemy>(new MedEnemy(10, 5)));
-			medEnemies.push_back(std::unique_ptr<MedEnemy>(new MedEnemy(60, 8)));
-			medEnemies.push_back(std::unique_ptr<MedEnemy>(new MedEnemy(110, 8)));
-			medEnemies.push_back(std::unique_ptr<MedEnemy>(new MedEnemy(160, 5)));
+			if (enemiesCreated < 24) {
+				lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
+				for (auto& enemy : lowEnemies)
+				{
+					if (enemy->initial) {
+						enemy->bezier->setBezier(96.0f, 0.0f, 62.0f, 64.0f, 237.0f, 176.0f, 130.0f, 213.0f);
+						enemy->group = 1;
+						enemy->initial = false;
+					}
+				}
+				lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
+				for (auto& enemy : lowEnemies)
+				{
+					if (enemy->initial) {
+						enemy->bezier->setBezier(126.0f, -20.0f, 160.0f, 64.0f, -15.0f, 176.0f, 130.0f, 213.0f);
+						enemy->group = 2;
+						enemy->initial = false;
+					}
+				}
+
+				enemiesCreated += 2;
+			}
+
 			break;
 
 		case 3:
@@ -258,6 +425,7 @@ public:
 
 	// Called by ConsoleEngine, creates and loads all game resources and data
 	virtual bool OnUserCreate()
+
 	{
 		return true;
 	}
@@ -422,6 +590,129 @@ public:
 
 			// enemy movement
 
+			for (auto& enemy : lowEnemies)
+
+			{
+				if (enemy->animationNum == 0) {
+					enemy->bezier->xGreen1 = bezierPoint(enemy->bezier->ex1, enemy->bezier->cx1, enemy->bezier->bi);
+					enemy->bezier->yGreen1 = bezierPoint(enemy->bezier->ey1, enemy->bezier->cy1, enemy->bezier->bi);
+					enemy->bezier->xGreen2 = bezierPoint(enemy->bezier->cx1, enemy->bezier->cx2, enemy->bezier->bi);
+					enemy->bezier->yGreen2 = bezierPoint(enemy->bezier->cy1, enemy->bezier->cy2, enemy->bezier->bi);
+					enemy->bezier->xGreen3 = bezierPoint(enemy->bezier->cx2, enemy->bezier->ex2, enemy->bezier->bi);
+					enemy->bezier->yGreen3 = bezierPoint(enemy->bezier->cy2, enemy->bezier->ey2, enemy->bezier->bi);
+
+					// The Blue Line
+					enemy->bezier->xBlue1 = bezierPoint(enemy->bezier->xGreen1, enemy->bezier->xGreen2, enemy->bezier->bi);
+					enemy->bezier->yBlue1 = bezierPoint(enemy->bezier->yGreen1, enemy->bezier->yGreen2, enemy->bezier->bi);
+					enemy->bezier->xBlue2 = bezierPoint(enemy->bezier->xGreen2, enemy->bezier->xGreen3, enemy->bezier->bi);
+					enemy->bezier->yBlue2 = bezierPoint(enemy->bezier->yGreen2, enemy->bezier->yGreen3, enemy->bezier->bi);
+
+					// The Black Dot
+					enemy->pos.x = bezierPoint(enemy->bezier->xBlue1, enemy->bezier->xBlue2, enemy->bezier->bi);
+					enemy->pos.y = bezierPoint(enemy->bezier->yBlue1, enemy->bezier->yBlue2, enemy->bezier->bi);
+
+					enemy->bezier->bi += 0.01;
+
+					if (enemy->pos.x <= 132 && enemy->pos.y >= 212) {
+						enemy->animationNum = 1;
+						enemy->bezier->setBezier(132.0f, 212.0f, 9.0f, 248.0f, 150.0f, 82.0f, 142.0f, 34.0f);
+						enemy->bezier->bi = 0;
+					}
+					else if (enemy->pos.x >= 132 && enemy->pos.y >= 212) {
+						enemy->animationNum = 1;
+						enemy->bezier->setBezier(132.0f, 212.0f, 240.0f, 248.0f, 130.0f, 82.0f, 162.0f, 34.0f);
+						enemy->bezier->bi = 0;
+					}
+				}
+				else if (enemy->animationNum == 1) {
+					enemy->bezier->xGreen1 = bezierPoint(enemy->bezier->ex1, enemy->bezier->cx1, enemy->bezier->bi);
+					enemy->bezier->yGreen1 = bezierPoint(enemy->bezier->ey1, enemy->bezier->cy1, enemy->bezier->bi);
+					enemy->bezier->xGreen2 = bezierPoint(enemy->bezier->cx1, enemy->bezier->cx2, enemy->bezier->bi);
+					enemy->bezier->yGreen2 = bezierPoint(enemy->bezier->cy1, enemy->bezier->cy2, enemy->bezier->bi);
+					enemy->bezier->xGreen3 = bezierPoint(enemy->bezier->cx2, enemy->bezier->ex2, enemy->bezier->bi);
+					enemy->bezier->yGreen3 = bezierPoint(enemy->bezier->cy2, enemy->bezier->ey2, enemy->bezier->bi);
+
+					// The Blue Line
+					enemy->bezier->xBlue1 = bezierPoint(enemy->bezier->xGreen1, enemy->bezier->xGreen2, enemy->bezier->bi);
+					enemy->bezier->yBlue1 = bezierPoint(enemy->bezier->yGreen1, enemy->bezier->yGreen2, enemy->bezier->bi);
+					enemy->bezier->xBlue2 = bezierPoint(enemy->bezier->xGreen2, enemy->bezier->xGreen3, enemy->bezier->bi);
+					enemy->bezier->yBlue2 = bezierPoint(enemy->bezier->yGreen2, enemy->bezier->yGreen3, enemy->bezier->bi);
+
+					// The Black Dot
+					enemy->pos.x = bezierPoint(enemy->bezier->xBlue1, enemy->bezier->xBlue2, enemy->bezier->bi);
+					enemy->pos.y = bezierPoint(enemy->bezier->yBlue1, enemy->bezier->yBlue2, enemy->bezier->bi);
+
+					enemy->bezier->bi += 0.008;
+
+					if (enemy->pos.y == 20 && enemy->group == 1) {
+						enemy->animationNum = 2;
+					}
+					else if (enemy->pos.y == 40 && enemy->group == 2) {
+						enemy->animationNum = 2;
+					}
+				}
+
+				else if (enemy->animationNum == 2) {
+					enemy->pos.x -= 1;
+					if (enemy->pos.x <= 20) {
+						for (auto& enemy : lowEnemies)
+						{
+							enemy->animationNum = 3;
+						}
+					}
+				}
+
+				else if (enemy->animationNum == 3) {
+					enemy->pos.x += 1;
+					enemy->pixelsMoved++;
+					if (enemy->pixelsMoved == 85) {
+						enemy->pixelsMoved = 0;
+						enemy->animationNum = 4;
+					}
+				}
+
+				else if (enemy->animationNum == 4) {
+					enemy->pos.x -= 1;
+					enemy->pixelsMoved++;
+					if (enemy->pixelsMoved == 85) {
+						enemy->pixelsMoved = 0;
+						enemy->animationNum = 3;
+					}
+				}
+			}
+
+			for (auto& enemy : lowEnemies)
+			{
+				if (enemy->pos.x > 150) {
+					/*
+					bX1 = enemy->pos.x;
+					bX2 = 150.0f;
+					bX3 = 50.0f;
+					bY1 = enemy->pos.y;
+					bY2 = 20.0f;
+					bY3 = -50.0f;
+					bi = 0.0f;
+					switchy = false;
+					*/
+				}
+			}
+
+			/*
+			if (timer == 150) {
+				for (auto& enemy : lowEnemies)
+				{
+					bXa = 0;
+					bYa = 0;
+					bXb = 0;
+					bYb = 0;
+					bi = 0;
+					enemy->pos.x = 0;
+					enemy->pos.y = 0;
+				}
+			}
+			*/
+
+			/*
 			if (timer <= 50) {
 				for (auto& enemy : lowEnemies)
 				{
@@ -463,6 +754,7 @@ public:
 					enemy->pos.y -= 1;
 				}
 			}
+			*/
 
 			for (auto& explosion : explosions) // access by reference to avoid copying
 			{
@@ -628,6 +920,10 @@ public:
 				highEnemies.end()
 						);
 
+			if ((int)(timer) % 20 == 0) {
+				updateLevel();
+			}
+
 			if ((int)(timer) == 150) {
 				timer = 0;
 			}
@@ -637,30 +933,67 @@ public:
 			// Erase All
 			Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
 
+			float x9;
+			float y9;
+
+			/*
+			for (float i = 0; i < 1; i += 0.01)
+			{
+				// The Green Lines
+				xGreen1 = bezierPoint(ex1, cx1, i);
+				yGreen1 = bezierPoint(ey1, cy1, i);
+				xGreen2 = bezierPoint(cx1, cx2, i);
+				yGreen2 = bezierPoint(cy1, cy2, i);
+				xGreen3 = bezierPoint(cx2, ex2, i);
+				yGreen3 = bezierPoint(cy2, ey2, i);
+
+				// The Blue Line
+				xBlue1 = bezierPoint(xGreen1, xGreen2, i);
+				yBlue1 = bezierPoint(yGreen1, yGreen2, i);
+				xBlue2 = bezierPoint(xGreen2, xGreen3, i);
+				yBlue2 = bezierPoint(yGreen2, yGreen3, i);
+
+				// The Black Dot
+				x9 = bezierPoint(xBlue1, xBlue2, i);
+				y9 = bezierPoint(yBlue1, yBlue2, i);
+
+				//x9 = bezierPoint(xm, xn, i);
+				//y9 = bezierPoint(ym, yn, i);
+
+				/*
+				xFinal = bezierPoint(xm, xn, i);
+				yFinal = bezierPoint(ym, yn, i);
+				*/
+				// The Black Dot
+			/*
+				Draw(x9, y9);
+			}
+			*/
+
 			// draw bullets
 			for (auto& bullet : bullets) // access by reference to avoid copying
 			{
 				if (bullet.y != -1 && bullet.y > 2) {
 					if (player.level == 1) {
-						Draw((int)(bullet.x) + 6, (int)(bullet.y), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 1), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 2), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 3), PIXEL_HALF, FG_RED);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 4), PIXEL_HALF, FG_RED);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 5), PIXEL_HALF, FG_RED);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y), PIXEL_SOLID);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 1), PIXEL_SOLID);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 2), PIXEL_SOLID);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 3), PIXEL_HALF);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 4), PIXEL_HALF);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 5), PIXEL_HALF);
 
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 1), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 2), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 3), PIXEL_HALF, FG_RED);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 4), PIXEL_HALF, FG_RED);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 5), PIXEL_HALF, FG_RED);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 1), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 2), PIXEL_SOLID, FG_RED);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 3), PIXEL_HALF, FG_RED);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 4), PIXEL_HALF, FG_RED);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 5), PIXEL_HALF, FG_RED);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y), PIXEL_SOLID);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 1), PIXEL_SOLID);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 2), PIXEL_SOLID);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 3), PIXEL_HALF);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 4), PIXEL_HALF);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 5), PIXEL_HALF);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y), PIXEL_SOLID);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 1), PIXEL_SOLID);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 2), PIXEL_SOLID);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 3), PIXEL_HALF);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 4), PIXEL_HALF);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 5), PIXEL_HALF);
 					}
 				}
 			}
@@ -682,12 +1015,14 @@ public:
 
 			for (auto& enemy : lowEnemies) // access by reference to avoid copying
 			{
-				for (unsigned short i = 0; i < enemy->sLEnemySprite.size(); i++) {
-					if (enemy->sLEnemySprite[i] == 'o') {
-						if (enemy->hurt == false)
-							Draw(i % enemy->width + (int)(enemy->pos.x), floor(i / enemy->width) + (int)(enemy->pos.y));
-						if (enemy->hurt)
-							Draw(i % enemy->width + (int)(enemy->pos.x), floor(i / enemy->width) + (int)(enemy->pos.y), PIXEL_HALF);
+				if (enemy->pos.x != 0.0f) {
+					for (unsigned short i = 0; i < enemy->sLEnemySprite.size(); i++) {
+						if (enemy->sLEnemySprite[i] == 'o') {
+							if (enemy->hurt == false)
+								Draw(i % enemy->width + (enemy->pos.x), floor(i / enemy->width) + (enemy->pos.y));
+							if (enemy->hurt)
+								Draw(i % enemy->width + (enemy->pos.x), floor(i / enemy->width) + (enemy->pos.y), PIXEL_HALF);
+						}
 					}
 				}
 			}
