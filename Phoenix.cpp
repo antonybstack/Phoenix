@@ -16,6 +16,9 @@ Last Updated: 7/1/2020
 #include <string>
 #include "ConsoleEngine.h"
 #include "TextGenerator.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include<time.h>
 
 bool leftCollision = false;
 bool rightCollision = false;
@@ -30,6 +33,8 @@ bool gamePause = false;
 bool levelComplete = true;
 unsigned int nScore = 0;
 short enemiesCreated = 0;
+int r;
+
 std::wstring sStartScreen1 = OutputText("press 'enter' to start");
 std::wstring EndScreen1 = OutputText("You Win!");
 std::wstring EndScreen2 = OutputText("Press 'Enter' to play again!");
@@ -144,10 +149,12 @@ struct Bullet {
 	bool used = false;
 	float x;
 	float y;
+	bool isEnemy;
 
-	Bullet(float x1, float y1) {
+	Bullet(float x1, float y1, bool isEnemy) {
 		x = x1;
 		y = y1;
+		this->isEnemy = isEnemy;
 	}
 };
 
@@ -169,7 +176,7 @@ struct Player : public GameObject {
 	std::wstring sPlayerSprite;
 	Player() {
 		pos = { 120.0f, 200.0f };
-		health = 3;
+		health = 5;
 		width = 13;
 		height = 14;
 
@@ -315,6 +322,7 @@ std::vector<std::shared_ptr<LowEnemy>> lowEnemies;
 std::vector<std::shared_ptr<MedEnemy>> medEnemies;
 std::vector<std::shared_ptr<HighEnemy>> highEnemies;
 std::vector<Bullet> bullets;
+std::vector<Bullet> enemyBullets;
 Player player;
 
 class Phoenix : public ConsoleEngine
@@ -418,6 +426,7 @@ public:
 	virtual bool OnUserCreate()
 
 	{
+		srand((int)time(0));
 		return true;
 	}
 
@@ -473,7 +482,7 @@ public:
 					std::remove_if(
 						bullets.begin(),
 						bullets.end(),
-						[](auto& bullet) { return bullet.y >= -1; }
+						[](auto& bullet) { return (bullet.y >= -1); }
 					),
 					bullets.end()
 				);
@@ -562,7 +571,7 @@ public:
 			//if (timer % 10 == 0) {
 			if (m_keys[0x5A].bPressed)
 			{
-				Bullet bullet = { player.pos.x,player.pos.y };
+				Bullet bullet = { player.pos.x,player.pos.y,false };
 				bullets.push_back(bullet);
 			}
 			//}
@@ -597,6 +606,25 @@ public:
 							}
 						}
 					}
+				}
+			}
+
+			/*
+			float hh = (ceil(player.height / 2));
+			float ff = (ceil(player.height / 2));
+			float sdf = player.pos.y - (ceil(player.height / 2));
+			float fgh = player.pos.y + (ceil(player.height / 2));
+			*/
+
+			for (auto& bullet : enemyBullets) // access by reference to avoid copying
+			{
+				bullet.y += 100 * fElapsedTime; // continue to shift bullet up one pixel to the top of screen
+
+				if (bullet.x >= player.pos.x - (ceil(player.width / 2) + 2) && bullet.x <= player.pos.x + (ceil(player.width / 2) + 1) && bullet.y >= player.pos.y - (ceil(player.height / 2) - 3) && bullet.y <= player.pos.y + (ceil(player.height))) {
+					player.health -= 1;
+					//player.hurt = true;
+
+					bullet.used = true;
 				}
 			}
 
@@ -689,6 +717,15 @@ public:
 						enemy->pixelsMoved = 0;
 						enemy->animationNum = 3;
 					}
+				}
+			}
+
+			// enemy bullet shot
+			for (auto& enemy : lowEnemies) {
+				r = (rand() % 1000);
+				if (r <= 5) {
+					Bullet bullet = { enemy->pos.x,enemy->pos.y + enemy->height,true };
+					enemyBullets.push_back(bullet);
 				}
 			}
 
@@ -824,6 +861,24 @@ public:
 				bullets.end()
 			);
 
+			enemyBullets.erase(
+				std::remove_if(
+					enemyBullets.begin(),
+					enemyBullets.end(),
+					[](auto& enemyBullet) { return enemyBullet.y > 225; }
+				),
+				enemyBullets.end()
+			);
+
+			enemyBullets.erase(
+				std::remove_if(
+					enemyBullets.begin(),
+					enemyBullets.end(),
+					[](auto& enemyBullet) { return enemyBullet.used == true; }
+				),
+				enemyBullets.end()
+			);
+
 			// enemy objects deleted if health becomes 0
 			lowEnemies.erase(
 				std::remove_if(
@@ -867,6 +922,10 @@ public:
 				explosions.end()
 						);
 
+			if (player.health == 0) {
+				gameComplete = true;
+			}
+
 			if ((int)(timer) == 150) {
 				timer = 0;
 			}
@@ -884,23 +943,49 @@ public:
 						Draw((int)(bullet.x) + 6, (int)(bullet.y), PIXEL_SOLID);
 						Draw((int)(bullet.x) + 6, (int)(bullet.y + 1), PIXEL_SOLID);
 						Draw((int)(bullet.x) + 6, (int)(bullet.y + 2), PIXEL_SOLID);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 3), PIXEL_HALF);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 4), PIXEL_HALF);
-						Draw((int)(bullet.x) + 6, (int)(bullet.y + 5), PIXEL_HALF);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 3), PIXEL_SOLID);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 4), PIXEL_SOLID);
+						Draw((int)(bullet.x) + 6, (int)(bullet.y + 5), PIXEL_SOLID);
 
 						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y), PIXEL_SOLID);
 						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 1), PIXEL_SOLID);
 						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 2), PIXEL_SOLID);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 3), PIXEL_HALF);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 4), PIXEL_HALF);
-						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 5), PIXEL_HALF);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 3), PIXEL_SOLID);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 4), PIXEL_SOLID);
+						Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 5), PIXEL_SOLID);
 						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y), PIXEL_SOLID);
 						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 1), PIXEL_SOLID);
 						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 2), PIXEL_SOLID);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 3), PIXEL_HALF);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 4), PIXEL_HALF);
-						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 5), PIXEL_HALF);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 3), PIXEL_SOLID);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 4), PIXEL_SOLID);
+						Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 5), PIXEL_SOLID);
 					}
+				}
+			}
+
+			for (auto& bullet : enemyBullets) // access by reference to avoid copying
+			{
+				if (bullet.y != -1 && bullet.y > 2) {
+					Draw((int)(bullet.x) + 6, (int)(bullet.y - 1), PIXEL_HALF);
+					Draw((int)(bullet.x) + 6, (int)(bullet.y), PIXEL_SOLID);
+					Draw((int)(bullet.x) + 6, (int)(bullet.y + 1), PIXEL_SOLID);
+					Draw((int)(bullet.x) + 6, (int)(bullet.y + 2), PIXEL_SOLID);
+					Draw((int)(bullet.x) + 6, (int)(bullet.y + 3), PIXEL_HALF);
+					//Draw((int)(bullet.x) + 6, (int)(bullet.y + 4), PIXEL_HALF);
+					//Draw((int)(bullet.x) + 6, (int)(bullet.y + 5), PIXEL_HALF);
+
+					Draw((int)(bullet.x - 1) + 6, (int)(bullet.y - 1), PIXEL_HALF);
+					Draw((int)(bullet.x + 1) + 6, (int)(bullet.y - 1), PIXEL_HALF);
+
+					Draw((int)(bullet.x - 1) + 6, (int)(bullet.y), PIXEL_HALF);
+					Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 1), PIXEL_HALF);
+					Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 2), PIXEL_HALF);
+					Draw((int)(bullet.x - 1) + 6, (int)(bullet.y + 3), PIXEL_HALF);
+
+					Draw((int)(bullet.x + 1) + 6, (int)(bullet.y), PIXEL_HALF);
+					Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 1), PIXEL_HALF);
+					Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 2), PIXEL_HALF);
+					Draw((int)(bullet.x + 1) + 6, (int)(bullet.y + 3), PIXEL_HALF);
 				}
 			}
 
