@@ -461,14 +461,7 @@ std::vector<std::wstring> letterArr(char c) {
 }
 
 std::wstring OutputText(std::string sentence) {
-	//std::vector<std::wstring*> letterArrays;
-	//std::wstring* letterArray = new std::wstring[1024];
 	std::vector<std::vector<std::wstring>> LETTERS;
-	//char* p = new char[sentence.length()];
-	//for (int i = 0; i < sizeof(p); i++) {
-	//	p[i] = sentence[i];
-	//}
-
 	for (int i = 0; i < sentence.length(); i++) {
 		std::vector<std::wstring> LETTER = letterArr(toupper(sentence[i]));
 
@@ -478,17 +471,6 @@ std::wstring OutputText(std::string sentence) {
 			LETTERS.push_back(LETTERSPACE);
 		}
 	}
-
-	//std::vector<std::wstring> LETTER1 = letterArr('P');
-	//std::vector<std::wstring> LETTER2 = letterArr('R');
-	//std::vector<std::wstring> LETTER3 = letterArr('E');
-//	std::vector<std::wstring> LETTER4 = letterArr('S');
-//	std::vector<std::wstring> LETTER5 = letterArr('S');
-	//LETTERS.push_back(LETTER1);
-	//LETTERS.push_back(LETTER2);
-	//LETTERS.push_back(LETTER3);
-	//LETTERS.push_back(LETTER4);
-	//LETTERS.push_back(LETTER5);
 	std::wstring sText;
 
 	int index = 0;

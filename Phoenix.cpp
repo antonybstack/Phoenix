@@ -30,25 +30,17 @@ bool gamePause = false;
 bool levelComplete = true;
 unsigned int nScore = 0;
 short enemiesCreated = 0;
-/*
-float bXa;
-float bXb;
-float bYa;
-float bYb;
-float bX1 = 50.0f;
-float bX2 = -50.0f;
-float bX3 = 100.0f;
-float bY1 = 10.0f;
-float bY2 = 150.0f;
-float bY3 = 150.0f;
-float bi = 0;
-*/
+std::wstring sStartScreen1 = OutputText("press 'enter' to start");
+std::wstring EndScreen1 = OutputText("You Win!");
+std::wstring EndScreen2 = OutputText("Press 'Enter' to play again!");
 
 struct Coordinate {
 	float x;
 	float y;
 };
 
+// helped me implement https://stackoverflow.com/questions/785097/how-do-i-implement-a-b%c3%a9zier-curve-in-c/11435243#11435243
+// tool to draw bezier curves https://www.useragentman.com/tests/textpath/bezier-curve-construction-set.html#path=M%20126%2C%208%20C%20169%2C%2063%2C%200%2C%20120%2C%20129%2C%20178&imageURL=http://www.useragentman.com/tests/textpath/images/grid.png
 struct Bezier {
 	float ex1;
 	float ey1;
@@ -364,25 +356,6 @@ public:
 				enemiesCreated += 2;
 			}
 
-			//LowEnemy temp = new LowEnemy(20, 8);
-			//temp->createBezier(89.0f, 79.0f, 14.0f, 117.0f, 34.0f, 238.0f, 108.0f, 170.0f);
-			//lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
-			//lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(45, 5)));
-			/*
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(45, 5)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(70, 8)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(95, 5)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(120, 8)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(145, 5)));
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(170, 8)));
-			//lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(220, 5)));
-			*/
-
-			//for (auto& enemy : lowEnemies)
-			//{
-			//	enemy->bezier->setBezier(96.0f, 8.0f, 62.0f, 64.0f, 237.0f, 176.0f, 130.0f, 213.0f);
-			//}
-
 			break;
 		}
 		case 2:
@@ -408,10 +381,8 @@ public:
 						enemy->initial = false;
 					}
 				}
-
 				enemiesCreated += 2;
 			}
-
 			break;
 
 		case 3:
@@ -437,7 +408,6 @@ public:
 						enemy->initial = false;
 					}
 				}
-
 				enemiesCreated += 2;
 			}
 			break;
@@ -463,8 +433,6 @@ public:
 			// First we clear the screen
 
 			// Then draw Title and Border at the top
-
-			std::wstring sStartScreen1 = OutputText("press 'enter' to start");
 
 			if (startScreenTimer > 0 && startScreenTimer <= 1) {
 				Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
@@ -514,38 +482,32 @@ public:
 
 			// First we clear the screen
 
-			Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
 			// Then draw Title and Border at the top
 
-			std::wstring sStartScreen1 = OutputText("You Win!");
-			std::wstring sStartScreen2 = OutputText("Press 'Enter' to play again!");
-
-			if (startScreenTimer > 0 && startScreenTimer < 15) {
-				for (unsigned short i = 0; i < sStartScreen1.size(); i++) {
-					if (sStartScreen1[i] == 'o') {
-						Draw(i % (sStartScreen1.size() / 9) + 100, (floor(i / (sStartScreen1.size() / 9) + ScreenHeight() / 2)) - 40, PIXEL_SOLID, FG_GREEN);
+			if (startScreenTimer > 0 && startScreenTimer <= 2) {
+				Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
+				for (unsigned short i = 0; i < EndScreen1.size(); i++) {
+					if (EndScreen1[i] == 'o') {
+						Draw(i % (EndScreen1.size() / 9) + 100, (floor(i / (EndScreen1.size() / 9) + ScreenHeight() / 2)) - 40, PIXEL_SOLID, FG_GREEN);
 					}
 				}
-			}
-			else {
-				for (unsigned short i = 0; i < sStartScreen1.size(); i++) {
-					if (sStartScreen1[i] == 'o') {
-						Draw(i % (sStartScreen1.size() / 9) + 100, (floor(i / (sStartScreen1.size() / 9) + ScreenHeight() / 2)) - 40, PIXEL_HALF, FG_GREEN);
+				for (unsigned short i = 0; i < EndScreen2.size(); i++) {
+					if (EndScreen2[i] == 'o') {
+						Draw(i % (EndScreen2.size() / 9) + 28, (floor(i / (EndScreen2.size() / 9) + ScreenHeight() / 2)), PIXEL_SOLID, FG_GREEN);
 					}
 				}
 			}
 
-			if (startScreenTimer > 0 && startScreenTimer < 15) {
-				for (unsigned short i = 0; i < sStartScreen2.size(); i++) {
-					if (sStartScreen2[i] == 'o') {
-						Draw(i % (sStartScreen2.size() / 9) + 28, (floor(i / (sStartScreen2.size() / 9) + ScreenHeight() / 2)), PIXEL_SOLID, FG_GREEN);
+			else if (startScreenTimer > 15 && startScreenTimer <= 17) {
+				Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
+				for (unsigned short i = 0; i < EndScreen1.size(); i++) {
+					if (EndScreen1[i] == 'o') {
+						Draw(i % (EndScreen1.size() / 9) + 100, (floor(i / (EndScreen1.size() / 9) + ScreenHeight() / 2)) - 40, PIXEL_HALF, FG_GREEN);
 					}
 				}
-			}
-			else {
-				for (unsigned short i = 0; i < sStartScreen2.size(); i++) {
-					if (sStartScreen2[i] == 'o') {
-						Draw(i % (sStartScreen2.size() / 9) + 28, (floor(i / (sStartScreen2.size() / 9) + ScreenHeight() / 2)), PIXEL_HALF, FG_GREEN);
+				for (unsigned short i = 0; i < EndScreen2.size(); i++) {
+					if (EndScreen2[i] == 'o') {
+						Draw(i % (EndScreen2.size() / 9) + 28, (floor(i / (EndScreen2.size() / 9) + ScreenHeight() / 2)), PIXEL_HALF, FG_GREEN);
 					}
 				}
 			}
@@ -637,26 +599,8 @@ public:
 					}
 				}
 			}
-			/*
-			else if (player.level >= 2) {
-				for (auto& bullet : bullets)
-				{
-					if (bullet.x != -1 && bullet.y != -1) {
-						bullet.y -= 1; // continue to shift bullet up one pixel to the top of screen
-
-						//level two bullets are twice the size
-						for (auto& enemy : lowEnemies)
-						{
-							if ((bullet.x + 2 >= enemy->pos.x - enemy->size && bullet.x - 2 <= enemy->pos.x + enemy->size) && enemy->pos.y == bullet.y && enemy->health != 0)
-								enemy->health -= 1;
-						}
-					}
-				}
-			}
-			*/
 
 			// enemy movement
-
 			for (auto& enemy : lowEnemies)
 
 			{
@@ -747,81 +691,6 @@ public:
 					}
 				}
 			}
-
-			for (auto& enemy : lowEnemies)
-			{
-				if (enemy->pos.x > 150) {
-					/*
-					bX1 = enemy->pos.x;
-					bX2 = 150.0f;
-					bX3 = 50.0f;
-					bY1 = enemy->pos.y;
-					bY2 = 20.0f;
-					bY3 = -50.0f;
-					bi = 0.0f;
-					switchy = false;
-					*/
-				}
-			}
-
-			/*
-			if (timer == 150) {
-				for (auto& enemy : lowEnemies)
-				{
-					bXa = 0;
-					bYa = 0;
-					bXb = 0;
-					bYb = 0;
-					bi = 0;
-					enemy->pos.x = 0;
-					enemy->pos.y = 0;
-				}
-			}
-			*/
-
-			/*
-			if (timer <= 50) {
-				for (auto& enemy : lowEnemies)
-				{
-					enemy->pos.x += 1;
-				}
-				for (auto& enemy : medEnemies)
-				{
-					enemy->pos.x += .5;
-				}
-				for (auto& enemy : highEnemies)
-				{
-					enemy->pos.x += 1;
-				}
-			}
-
-			else if (timer <= 75) {
-				for (auto& enemy : lowEnemies)
-				{
-					enemy->pos.y += 1;
-				}
-			}
-			else if (timer <= 125) {
-				for (auto& enemy : lowEnemies)
-				{
-					enemy->pos.x -= 1;
-				}
-				for (auto& enemy : medEnemies)
-				{
-					enemy->pos.x -= .5;
-				}
-				for (auto& enemy : highEnemies)
-				{
-					enemy->pos.x -= 1;
-				}
-			}
-			else if (timer <= 150) {
-				for (auto& enemy : lowEnemies)
-				{
-					enemy->pos.y -= 1;
-				}
-			}
-			*/
 
 			for (auto& explosion : explosions) // access by reference to avoid copying
 			{
@@ -1006,43 +875,6 @@ public:
 
 			// Erase All
 			Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
-
-			//float x9;
-			//float y9;
-
-			/*
-			for (float i = 0; i < 1; i += 0.01)
-			{
-				// The Green Lines
-				xGreen1 = bezierPoint(ex1, cx1, i);
-				yGreen1 = bezierPoint(ey1, cy1, i);
-				xGreen2 = bezierPoint(cx1, cx2, i);
-				yGreen2 = bezierPoint(cy1, cy2, i);
-				xGreen3 = bezierPoint(cx2, ex2, i);
-				yGreen3 = bezierPoint(cy2, ey2, i);
-
-				// The Blue Line
-				xBlue1 = bezierPoint(xGreen1, xGreen2, i);
-				yBlue1 = bezierPoint(yGreen1, yGreen2, i);
-				xBlue2 = bezierPoint(xGreen2, xGreen3, i);
-				yBlue2 = bezierPoint(yGreen2, yGreen3, i);
-
-				// The Black Dot
-				x9 = bezierPoint(xBlue1, xBlue2, i);
-				y9 = bezierPoint(yBlue1, yBlue2, i);
-
-				//x9 = bezierPoint(xm, xn, i);
-				//y9 = bezierPoint(ym, yn, i);
-
-				/*
-				xFinal = bezierPoint(xm, xn, i);
-				yFinal = bezierPoint(ym, yn, i);
-				*/
-				// The Black Dot
-			/*
-				Draw(x9, y9);
-			}
-			*/
 
 			// draw bullets
 			for (auto& bullet : bullets) // access by reference to avoid copying
