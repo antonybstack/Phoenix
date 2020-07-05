@@ -165,7 +165,6 @@ struct Explosion : public GameObject {
 	std::wstring sExplosionSprite = L"";
 	Explosion(float x, float y) {
 		pos = { x,y };
-		health = 1;
 		width = 13;
 		height = 13;
 	}
@@ -177,7 +176,7 @@ struct Player : public GameObject {
 	short level = 1;
 	std::wstring sPlayerSprite;
 	Player() {
-		pos = { 120.0f, 260.0f };
+		pos = { 120.0f, 200.0f };
 		health = 3;
 		width = 13;
 		height = 14;
@@ -202,7 +201,7 @@ struct Player : public GameObject {
 struct LowEnemy : public GameObject {
 	std::wstring sLEnemySprite;
 	bool initial = true;
-	short group;
+	short group = 0;
 	bool hurt = false;
 	short hurtTimer = 0;
 	short animationNum = 0;
@@ -229,8 +228,8 @@ struct LowEnemy : public GameObject {
 
 	~LowEnemy() {
 		explosions.push_back(std::unique_ptr<Explosion>(new Explosion(this->pos.x, this->pos.y)));
-		//delete this->bezier;
-		//bezier = nullptr;
+		delete this->bezier;
+		bezier = nullptr;
 		nScore += 100;
 	}
 };
@@ -463,19 +462,21 @@ public:
 			}
 			// First we clear the screen
 
-			Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
 			// Then draw Title and Border at the top
 
 			std::wstring sStartScreen1 = OutputText("press 'enter' to start");
 
-			if (startScreenTimer > 0 && startScreenTimer < 15) {
+			if (startScreenTimer > 0 && startScreenTimer <= 1) {
+				Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
 				for (unsigned short i = 0; i < sStartScreen1.size(); i++) {
 					if (sStartScreen1[i] == 'o') {
 						Draw(i % (sStartScreen1.size() / 9) + 50, floor(i / (sStartScreen1.size() / 9) + ScreenHeight() / 2));
 					}
 				}
 			}
-			else {
+
+			else if (startScreenTimer > 15 && startScreenTimer <= 16) {
+				Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
 				for (unsigned short i = 0; i < sStartScreen1.size(); i++) {
 					if (sStartScreen1[i] == 'o') {
 						Draw(i % (sStartScreen1.size() / 9) + 50, floor(i / (sStartScreen1.size() / 9) + ScreenHeight() / 2), PIXEL_HALF);
@@ -487,6 +488,7 @@ public:
 				startScreenTimer = 0;
 		}
 		else if (gameComplete) {
+			startScreenTimer++;
 			if (m_keys[VK_RETURN].bPressed) {
 				// reset all objects and variables before reset
 				gameComplete = false;
@@ -496,8 +498,9 @@ public:
 				nScore = 0;
 				player.level = 1;
 				player.pos.x = 120;
-				player.pos.y = 260;
+				player.pos.y = 200;
 				player.health = 3;
+				enemiesCreated = 0;
 				bullets.erase(
 					std::remove_if(
 						bullets.begin(),
@@ -511,11 +514,44 @@ public:
 
 			// First we clear the screen
 
+			Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
 			// Then draw Title and Border at the top
 
-			// draw title
+			std::wstring sStartScreen1 = OutputText("You Win!");
+			std::wstring sStartScreen2 = OutputText("Press 'Enter' to play again!");
 
-			//blinking reset screen
+			if (startScreenTimer > 0 && startScreenTimer < 15) {
+				for (unsigned short i = 0; i < sStartScreen1.size(); i++) {
+					if (sStartScreen1[i] == 'o') {
+						Draw(i % (sStartScreen1.size() / 9) + 100, (floor(i / (sStartScreen1.size() / 9) + ScreenHeight() / 2)) - 40, PIXEL_SOLID, FG_GREEN);
+					}
+				}
+			}
+			else {
+				for (unsigned short i = 0; i < sStartScreen1.size(); i++) {
+					if (sStartScreen1[i] == 'o') {
+						Draw(i % (sStartScreen1.size() / 9) + 100, (floor(i / (sStartScreen1.size() / 9) + ScreenHeight() / 2)) - 40, PIXEL_HALF, FG_GREEN);
+					}
+				}
+			}
+
+			if (startScreenTimer > 0 && startScreenTimer < 15) {
+				for (unsigned short i = 0; i < sStartScreen2.size(); i++) {
+					if (sStartScreen2[i] == 'o') {
+						Draw(i % (sStartScreen2.size() / 9) + 28, (floor(i / (sStartScreen2.size() / 9) + ScreenHeight() / 2)), PIXEL_SOLID, FG_GREEN);
+					}
+				}
+			}
+			else {
+				for (unsigned short i = 0; i < sStartScreen2.size(); i++) {
+					if (sStartScreen2[i] == 'o') {
+						Draw(i % (sStartScreen2.size() / 9) + 28, (floor(i / (sStartScreen2.size() / 9) + ScreenHeight() / 2)), PIXEL_HALF, FG_GREEN);
+					}
+				}
+			}
+
+			if (startScreenTimer == 30)
+				startScreenTimer = 0;
 		}
 		// Game started
 		else {
@@ -573,7 +609,7 @@ public:
 				for (auto& bullet : bullets) // access by reference to avoid copying
 				{
 					if (bullet.x != -1 && bullet.y != -1) {
-						bullet.y -= 250 * fElapsedTime; // continue to shift bullet up one pixel to the top of screen
+						bullet.y -= 300 * fElapsedTime; // continue to shift bullet up one pixel to the top of screen
 						for (auto& enemy : lowEnemies) // access by reference to avoid copying
 						{
 							if (bullet.x >= enemy->pos.x - (ceil(enemy->width / 2) + 1) && bullet.x <= enemy->pos.x + (ceil(enemy->width / 2) + 3) && bullet.y >= enemy->pos.y - enemy->height && bullet.y <= enemy->pos.y + enemy->height) {
@@ -951,6 +987,17 @@ public:
 				highEnemies.end()
 						);
 
+			explosions.erase(
+				std::remove_if(
+					explosions.begin(),
+					explosions.end(),
+					[](auto& explosion) {
+						return explosion->eTimer > 30;
+					}
+				),
+				explosions.end()
+						);
+
 			if ((int)(timer) == 150) {
 				timer = 0;
 			}
@@ -1094,7 +1141,7 @@ public:
 int main()
 {
 	Phoenix game;
-	game.ConstructConsole(250, 300, 2, 2);
+	game.ConstructConsole(250, 225, 2, 2);
 	game.Start();
 
 	return 0;
