@@ -347,7 +347,7 @@ public:
 				for (auto& enemy : lowEnemies)
 				{
 					if (enemy->initial) {
-						enemy->bezier->setBezier(96.0f, 0.0f, 62.0f, 64.0f, 237.0f, 176.0f, 130.0f, 213.0f);
+						enemy->bezier->setBezier(96.0f, 0.0f, 62.0f, 64.0f, 237.0f, 106.0f, 130.0f, 143.0f);
 						enemy->group = 1;
 						enemy->initial = false;
 					}
@@ -356,7 +356,7 @@ public:
 				for (auto& enemy : lowEnemies)
 				{
 					if (enemy->initial) {
-						enemy->bezier->setBezier(126.0f, -20.0f, 160.0f, 64.0f, -15.0f, 176.0f, 130.0f, 213.0f);
+						enemy->bezier->setBezier(126.0f, -20.0f, 160.0f, 64.0f, -15.0f, 106.0f, 130.0f, 143.0f);
 						enemy->group = 2;
 						enemy->initial = false;
 					}
@@ -387,12 +387,15 @@ public:
 			break;
 		}
 		case 2:
+			if (lowEnemies.size() == 0)
+				timer = 1;
+
 			if (enemiesCreated < 24) {
 				lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
 				for (auto& enemy : lowEnemies)
 				{
 					if (enemy->initial) {
-						enemy->bezier->setBezier(96.0f, 0.0f, 62.0f, 64.0f, 237.0f, 176.0f, 130.0f, 213.0f);
+						enemy->bezier->setBezier(96.0f, 0.0f, 62.0f, 64.0f, 237.0f, 106.0f, 130.0f, 143.0f);
 						enemy->group = 1;
 						enemy->initial = false;
 					}
@@ -401,7 +404,7 @@ public:
 				for (auto& enemy : lowEnemies)
 				{
 					if (enemy->initial) {
-						enemy->bezier->setBezier(126.0f, -20.0f, 160.0f, 64.0f, -15.0f, 176.0f, 130.0f, 213.0f);
+						enemy->bezier->setBezier(126.0f, -20.0f, 160.0f, 64.0f, -15.0f, 106.0f, 130.0f, 143.0f);
 						enemy->group = 2;
 						enemy->initial = false;
 					}
@@ -413,12 +416,31 @@ public:
 			break;
 
 		case 3:
-			lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(200, 10)));
+			if (lowEnemies.size() == 0)
+				timer = 1;
 
-			medEnemies.push_back(std::unique_ptr<MedEnemy>(new MedEnemy(200, 40)));
+			if (enemiesCreated < 36) {
+				lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
+				for (auto& enemy : lowEnemies)
+				{
+					if (enemy->initial) {
+						enemy->bezier->setBezier(96.0f, 0.0f, 62.0f, 64.0f, 237.0f, 106.0f, 130.0f, 143.0f);
+						enemy->group = 1;
+						enemy->initial = false;
+					}
+				}
+				lowEnemies.push_back(std::unique_ptr<LowEnemy>(new LowEnemy(0, 0)));
+				for (auto& enemy : lowEnemies)
+				{
+					if (enemy->initial) {
+						enemy->bezier->setBezier(126.0f, -20.0f, 160.0f, 64.0f, -15.0f, 106.0f, 130.0f, 143.0f);
+						enemy->group = 2;
+						enemy->initial = false;
+					}
+				}
 
-			highEnemies.push_back(std::unique_ptr<HighEnemy>(new HighEnemy(200, 70)));
-
+				enemiesCreated += 2;
+			}
 			break;
 		}
 	}
@@ -499,11 +521,20 @@ public:
 		else {
 			// ==== > LOGIC < ======================================================
 			timer++;
+
+			if (lowEnemies.size() == 0 && medEnemies.size() == 0 && highEnemies.size() == 0) {
+				levelComplete = true;
+			}
+
 			//updates current level
 			if (levelComplete == true) {
 				gameLevel++;
 				updateLevel();
 				levelComplete = false;
+			}
+
+			if ((int)(timer) % 20 == 0) {
+				updateLevel();
 			}
 
 			// player collisions
@@ -611,16 +642,16 @@ public:
 					enemy->pos.x = bezierPoint(enemy->bezier->xBlue1, enemy->bezier->xBlue2, enemy->bezier->bi);
 					enemy->pos.y = bezierPoint(enemy->bezier->yBlue1, enemy->bezier->yBlue2, enemy->bezier->bi);
 
-					enemy->bezier->bi += 0.01;
+					enemy->bezier->bi += 0.02;
 
-					if (enemy->pos.x <= 132 && enemy->pos.y >= 212) {
+					if (enemy->pos.x <= 132 && enemy->pos.y >= 143) {
 						enemy->animationNum = 1;
-						enemy->bezier->setBezier(132.0f, 212.0f, 9.0f, 248.0f, 150.0f, 82.0f, 142.0f, 34.0f);
+						enemy->bezier->setBezier(132.0f, 143.0f, 9.0f, 178.0f, 150.0f, 82.0f, 142.0f, 34.0f);
 						enemy->bezier->bi = 0;
 					}
-					else if (enemy->pos.x >= 132 && enemy->pos.y >= 212) {
+					else if (enemy->pos.x >= 132 && enemy->pos.y >= 143) {
 						enemy->animationNum = 1;
-						enemy->bezier->setBezier(132.0f, 212.0f, 240.0f, 248.0f, 130.0f, 82.0f, 162.0f, 34.0f);
+						enemy->bezier->setBezier(132.0f, 143.0f, 240.0f, 178.0f, 130.0f, 82.0f, 162.0f, 34.0f);
 						enemy->bezier->bi = 0;
 					}
 				}
@@ -642,12 +673,12 @@ public:
 					enemy->pos.x = bezierPoint(enemy->bezier->xBlue1, enemy->bezier->xBlue2, enemy->bezier->bi);
 					enemy->pos.y = bezierPoint(enemy->bezier->yBlue1, enemy->bezier->yBlue2, enemy->bezier->bi);
 
-					enemy->bezier->bi += 0.008;
+					enemy->bezier->bi += 0.02;
 
-					if (enemy->pos.y == 20 && enemy->group == 1) {
+					if (enemy->pos.y < 20 && enemy->group == 1) {
 						enemy->animationNum = 2;
 					}
-					else if (enemy->pos.y == 40 && enemy->group == 2) {
+					else if (enemy->pos.y < 40 && enemy->group == 2) {
 						enemy->animationNum = 2;
 					}
 				}
@@ -920,10 +951,6 @@ public:
 				highEnemies.end()
 						);
 
-			if ((int)(timer) % 20 == 0) {
-				updateLevel();
-			}
-
 			if ((int)(timer) == 150) {
 				timer = 0;
 			}
@@ -933,8 +960,8 @@ public:
 			// Erase All
 			Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
 
-			float x9;
-			float y9;
+			//float x9;
+			//float y9;
 
 			/*
 			for (float i = 0; i < 1; i += 0.01)
@@ -1049,10 +1076,6 @@ public:
 							Draw(i % enemy->width + (int)(enemy->pos.x), floor(i / enemy->width) + (int)(enemy->pos.y), PIXEL_HALF);
 					}
 				}
-			}
-
-			if (lowEnemies.size() == 0 && medEnemies.size() == 0 && highEnemies.size() == 0) {
-				levelComplete = true;
 			}
 
 			if (lowEnemies.size() == 0 && medEnemies.size() == 0 && highEnemies.size() == 0 && gameLevel == 4) {
