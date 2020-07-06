@@ -32,12 +32,15 @@ bool gameComplete = false;
 bool gamePause = false;
 bool levelComplete = true;
 unsigned int nScore = 0;
+unsigned int nMoney = 0;
 short enemiesCreated = 0;
 int r;
 
 std::wstring sStartScreen1 = OutputText("press 'enter' to start");
 std::wstring EndScreen1 = OutputText("You Win!");
 std::wstring EndScreen2 = OutputText("Press 'Enter' to play again!");
+std::wstring MoneyTitle = OutputText("Money $");
+std::wstring Money = OutputText("0");
 
 struct Coordinate {
 	float x;
@@ -165,11 +168,30 @@ struct Explosion : public GameObject {
 	Explosion(float x, float y) {
 		pos = { x,y };
 		width = 13;
-		height = 13;
+	}
+};
+
+struct MoneyDrop : public GameObject {
+	int eTimer = 0;
+	bool used = false;
+	//std::wstring sMoneySprite = L"";
+	std::wstring sMoneySprite;
+	MoneyDrop(float x, float y) {
+		pos = { x,y };
+		width = 16;
+		height = 5;
+		sMoneySprite += L".o..............";
+		sMoneySprite += L"ooo..o.ooo.ooo..";
+		sMoneySprite += L"o...oo.o.o.o.o..";
+		sMoneySprite += L"ooo..o.o.o.o.o..";
+		sMoneySprite += L"..o..o.o.o.o.o..";
+		sMoneySprite += L"ooo..o.ooo.ooo..";
+		sMoneySprite += L".o..............";
 	}
 };
 
 std::vector<std::shared_ptr<Explosion>> explosions;
+std::vector<std::shared_ptr<MoneyDrop>> moneyDrops;
 
 struct Player : public GameObject {
 	short level = 1;
@@ -227,6 +249,11 @@ struct LowEnemy : public GameObject {
 
 	~LowEnemy() {
 		explosions.push_back(std::unique_ptr<Explosion>(new Explosion(this->pos.x, this->pos.y)));
+		r = (rand() % 100);
+		if (r < 25) {
+			moneyDrops.push_back(std::unique_ptr<MoneyDrop>(new MoneyDrop(this->pos.x, this->pos.y)));
+		}
+
 		delete this->bezier;
 		bezier = nullptr;
 		nScore += 100;
@@ -609,13 +636,6 @@ public:
 				}
 			}
 
-			/*
-			float hh = (ceil(player.height / 2));
-			float ff = (ceil(player.height / 2));
-			float sdf = player.pos.y - (ceil(player.height / 2));
-			float fgh = player.pos.y + (ceil(player.height / 2));
-			*/
-
 			for (auto& bullet : enemyBullets) // access by reference to avoid copying
 			{
 				bullet.y += 100 * fElapsedTime; // continue to shift bullet up one pixel to the top of screen
@@ -625,6 +645,19 @@ public:
 					//player.hurt = true;
 
 					bullet.used = true;
+				}
+			}
+
+			float test2 = player.pos.x - (ceil(player.width / 2) + 2);
+			float test3 = player.pos.x + (ceil(player.width / 2) + 1);
+			float test5 = player.pos.x + (ceil(player.width / 2) + 1);
+			for (auto& moneyDrop : moneyDrops) // access by reference to avoid copying
+			{
+				moneyDrop->pos.y += 50 * fElapsedTime; // continue to shift bullet up one pixel to the top of screen
+				if (moneyDrop->pos.x + (moneyDrop->width - 2) >= player.pos.x && moneyDrop->pos.x - (moneyDrop->width - 2) <= player.pos.x && moneyDrop->pos.y >= player.pos.y - (ceil(player.height / 2) - 3) && moneyDrop->pos.y <= player.pos.y + (ceil(player.height))) {
+					nMoney += 100;
+					float test7 = moneyDrop->pos.x;
+					moneyDrop->used = true;
 				}
 			}
 
@@ -922,6 +955,28 @@ public:
 				explosions.end()
 						);
 
+			moneyDrops.erase(
+				std::remove_if(
+					moneyDrops.begin(),
+					moneyDrops.end(),
+					[](auto& moneyDrop) {
+						return moneyDrop->pos.y > 225;
+					}
+				),
+				moneyDrops.end()
+						);
+
+			moneyDrops.erase(
+				std::remove_if(
+					moneyDrops.begin(),
+					moneyDrops.end(),
+					[](auto& moneyDrop) {
+						return moneyDrop->used == true;
+					}
+				),
+				moneyDrops.end()
+						);
+
 			if (player.health == 0) {
 				gameComplete = true;
 			}
@@ -993,7 +1048,16 @@ public:
 			{
 				for (unsigned short i = 0; i < explosion->sExplosionSprite.size(); i++) {
 					if (explosion->sExplosionSprite[i] == 'o') {
-						Draw(i % 13 + (int)(explosion->pos.x), floor(i / 13) + (int)(explosion->pos.y));
+						Draw(i % explosion->width + (int)(explosion->pos.x), floor(i / explosion->width) + (int)(explosion->pos.y));
+					}
+				}
+			}
+
+			for (auto& moneyDrop : moneyDrops) // access by reference to avoid copying
+			{
+				for (unsigned short i = 0; i < moneyDrop->sMoneySprite.size(); i++) {
+					if (moneyDrop->sMoneySprite[i] == 'o') {
+						Draw(i % moneyDrop->width + (int)(moneyDrop->pos.x), floor(i / moneyDrop->width) + (int)(moneyDrop->pos.y));
 					}
 				}
 			}
@@ -1042,6 +1106,23 @@ public:
 				}
 			}
 
+			Fill(0, 225, ScreenWidth(), ScreenHeight(), PIXEL_SOLID, FG_DARK_GREY);
+
+			for (unsigned short i = 0; i < MoneyTitle.size(); i++) {
+				if (MoneyTitle[i] == 'o') {
+					Draw(i % (MoneyTitle.size() / 9) + 5, floor(i / (MoneyTitle.size() / 9) + 233));
+				}
+			}
+
+			std::string currentMoneyTotal = std::to_string(nMoney);
+
+			Money = OutputText(currentMoneyTotal);
+			for (unsigned short i = 0; i < Money.size(); i++) {
+				if (Money[i] == 'o') {
+					Draw(i % (Money.size() / 9) + 58, floor(i / (Money.size() / 9) + 233));
+				}
+			}
+
 			if (lowEnemies.size() == 0 && medEnemies.size() == 0 && highEnemies.size() == 0 && gameLevel == 4) {
 				gameComplete = true;
 			}
@@ -1058,7 +1139,7 @@ public:
 int main()
 {
 	Phoenix game;
-	game.ConstructConsole(250, 225, 2, 2);
+	game.ConstructConsole(250, 250, 2, 2);
 	game.Start();
 
 	return 0;

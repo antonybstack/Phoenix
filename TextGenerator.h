@@ -22,6 +22,132 @@ std::vector<std::wstring> letterArr(char c) {
 		LETTER.push_back(L"..");
 		break;
 
+	case '0':
+
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L".ooo.");
+		break;
+
+	case '1':
+
+		LETTER.push_back(L".o.");
+		LETTER.push_back(L"oo.");
+		LETTER.push_back(L".o.");
+		LETTER.push_back(L".o.");
+		LETTER.push_back(L".o.");
+		LETTER.push_back(L".o.");
+		LETTER.push_back(L".o.");
+		LETTER.push_back(L".o.");
+		LETTER.push_back(L"ooo");
+		break;
+
+	case '2':
+
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"...o.");
+		LETTER.push_back(L"..o..");
+		LETTER.push_back(L".o...");
+		LETTER.push_back(L"o....");
+		LETTER.push_back(L"o....");
+		LETTER.push_back(L"ooooo");
+		break;
+
+	case '3':
+
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L".ooo.");
+		break;
+
+	case '4':
+
+		LETTER.push_back(L"....o.");
+		LETTER.push_back(L"...oo.");
+		LETTER.push_back(L"..o.o.");
+		LETTER.push_back(L".o..o.");
+		LETTER.push_back(L"oooooo");
+		LETTER.push_back(L"....o.");
+		LETTER.push_back(L"....o.");
+		LETTER.push_back(L"....o.");
+		LETTER.push_back(L"....o.");
+		break;
+
+	case '5':
+
+		LETTER.push_back(L"ooooo");
+		LETTER.push_back(L"o....");
+		LETTER.push_back(L"o....");
+		LETTER.push_back(L"o....");
+		LETTER.push_back(L"oooo.");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"oooo.");
+		break;
+	case '6':
+
+		LETTER.push_back(L".ooo..");
+		LETTER.push_back(L"o...o.");
+		LETTER.push_back(L"o.....");
+		LETTER.push_back(L"o.....");
+		LETTER.push_back(L"o.oo..");
+		LETTER.push_back(L"oo..o.");
+		LETTER.push_back(L"o...o.");
+		LETTER.push_back(L"o...o.");
+		LETTER.push_back(L".ooo..");
+		break;
+	case '7':
+
+		LETTER.push_back(L"oooooo");
+		LETTER.push_back(L".....o");
+		LETTER.push_back(L".....o");
+		LETTER.push_back(L".....o");
+		LETTER.push_back(L"....o.");
+		LETTER.push_back(L"...o..");
+		LETTER.push_back(L"..o...");
+		LETTER.push_back(L".o....");
+		LETTER.push_back(L"o.....");
+		break;
+	case '8':
+
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L".ooo.");
+		break;
+	case '9':
+
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L"o...o");
+		LETTER.push_back(L".oooo");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		LETTER.push_back(L"....o");
+		break;
+
 	case 'A':
 
 		LETTER.push_back(L"..oo..");
@@ -335,15 +461,15 @@ std::vector<std::wstring> letterArr(char c) {
 
 	case 'Y':
 
-		LETTER.push_back(L"o....o");
-		LETTER.push_back(L"o....o");
-		LETTER.push_back(L"o....o");
-		LETTER.push_back(L"o....o");
-		LETTER.push_back(L".ooooo");
-		LETTER.push_back(L".....o");
-		LETTER.push_back(L".....o");
-		LETTER.push_back(L"o....o");
-		LETTER.push_back(L".oooo.");
+		LETTER.push_back(L"o.....o");
+		LETTER.push_back(L".o...o.");
+		LETTER.push_back(L"..o.o..");
+		LETTER.push_back(L"...o...");
+		LETTER.push_back(L"...o...");
+		LETTER.push_back(L"...o...");
+		LETTER.push_back(L"...o...");
+		LETTER.push_back(L"...o...");
+		LETTER.push_back(L"...o...");
 		break;
 
 	case 'Z':
@@ -357,6 +483,19 @@ std::vector<std::wstring> letterArr(char c) {
 		LETTER.push_back(L"o.....");
 		LETTER.push_back(L"o.....");
 		LETTER.push_back(L"oooooo");
+		break;
+
+	case '$':
+
+		LETTER.push_back(L"..o..");
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"o.o.o");
+		LETTER.push_back(L"o.o..");
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"..o.o");
+		LETTER.push_back(L"o.o.o");
+		LETTER.push_back(L".ooo.");
+		LETTER.push_back(L"..o..");
 		break;
 
 	case '!':
